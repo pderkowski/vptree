@@ -33,7 +33,7 @@ public:
     : points_(points)
     { }
 
-    std::vector<vpt::Result<Vector>> getNearestNeighbors(const Vector& target, int neighborsCount) const {
+    std::vector<vpt::Result<>> getNearestNeighbors(const Vector& target, int neighborsCount) const {
         std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> q;
         vpt::EuclideanMetric<Vector> metric;
 
@@ -42,13 +42,13 @@ public:
             q.push(std::make_pair(dist, i));
         }
 
-        std::vector<vpt::Result<Vector>> results;
+        std::vector<vpt::Result<>> results;
 
         while (neighborsCount--) {
             auto top = q.top();
             q.pop();
 
-            results.push_back(vpt::Result<Vector>{&(points_[top.second]), top.second, top.first});
+            results.push_back(vpt::Result<>{&(points_[top.second]), top.second, top.first});
         }
 
         return results;
@@ -90,6 +90,8 @@ TEST_CASE("VpTree can be constructed from a vector, std::array or initializer li
         {4, 5, 6},
         {7, 8, 9}
     });
+
+    vpt::VpTree<> t6(p1);
 }
 
 TEST_CASE("VpTree::getNearestNeighbors works in simple case") {

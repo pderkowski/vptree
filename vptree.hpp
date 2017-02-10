@@ -38,7 +38,7 @@ template<typename T, typename Metric>
 class Searcher;
 
 
-template<typename T>
+template<typename T = std::vector<double>>
 struct Result {
     const T* item;
     int index;
@@ -57,7 +57,7 @@ struct Result {
 
 
 
-template<typename T, typename Metric = EuclideanMetric<T>>
+template<typename T = std::vector<double>, typename Metric = EuclideanMetric<T>>
 class VpTree {
 public:
     template<typename InputIterator>
