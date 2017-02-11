@@ -14,7 +14,7 @@ The only significant difference is that a search routine can be performed in par
 ## Requirements
 
 - C++11 compatible compiler
-- cmake (if you want to run tests)
+- cmake 3.0+ (if you want to run tests)
 
 ## Instalation
 
@@ -41,29 +41,13 @@ auto points = std::vector<std::vector<double>>{
     {10, 0, 5}
 };
 
-vpt::VpTree<> t1(points); // create a tree
+vpt::VpTree t1(points); // create a tree
 
-std::vector<vpt::Result<>> results = t1.getNearestNeighbors({ 0, 0, 0 }, 3); // find 3 neighbors closest to the given point
+std::vector<double> distances;
+std::vector<int> indices;
+std::tie(distances, indices) = t1.getNearestNeighbors({ 0, 0, 0 }, 3); // find 3 neighbors closest to the given point
 
-// index is the position in the original (points) vector
-std::cout << results[0].index << "\n"; // prints 0
-
-// dist is the distance from the searched point
-std::cout << results[0].dist << "\n"; // prints 1
-
-// item holds the pointer to the point itself
-*(results[0].item) == points[0] // true
-*results[0] == points[0] // the same as above
-```
-
-By default VpTree uses `std::vector<double>` as a representation of multidimensional points, although other
-vector-like containers can be specified (for example `std::array`). Another default is the euclidean metric, this can be
-changed by giving the `vpt::VpTree` a second template argument. For example:
-
-```c++
-std::vector<std::array<double, 100>> points;
-// fill points
-
-vpt:VpTree<std::array<double, 100>, SomeOtherMetric> vpt(points);
+std::cout << distances[0] << "\n"; // prints 0
+std::cout << indices[0] << "\n"; // prints 1
 ```
 
