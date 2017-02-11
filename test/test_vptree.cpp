@@ -141,3 +141,27 @@ TEST_CASE("VpTree::getNearestNeighbors returns the same results as naive method 
         }
     }
 }
+
+TEST_CASE("VpTree throws an exception when data has inconsistent dimensions") {
+    auto points = std::vector<std::vector<double>>{
+        {1, 2},
+        {3, 4, 5}
+    };
+
+    REQUIRE_THROWS_AS([&] () {
+        vpt::VpTree t(points);
+        t.getNearestNeighbors({0, 0}, 1);
+    }(), vpt::DimensionMismatch);
+}
+
+TEST_CASE("VpTree throws an exception when query has inconsistent dimensions in respect to data") {
+    auto points = std::vector<std::vector<double>>{
+        {1, 2, 3},
+        {3, 4, 5}
+    };
+
+    REQUIRE_THROWS_AS([&] () {
+        vpt::VpTree t(points);
+        t.getNearestNeighbors({0, 0}, 1);
+    }(), vpt::DimensionMismatch);
+}

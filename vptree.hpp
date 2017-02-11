@@ -8,6 +8,7 @@
 #include <limits>
 #include <random>
 #include <cmath>
+#include <stdexcept>
 
 namespace vpt {
 
@@ -30,6 +31,13 @@ struct EuclideanMetric {
         auto sum = vpt::sum(diffSquares.begin(), diffSquares.end());
         return std::sqrt(sum);
     }
+};
+
+class DimensionMismatch: public std::runtime_error {
+public:
+    DimensionMismatch(int expected, int got)
+    : std::runtime_error("Item dimension doesn't match: expected " + std::to_string(expected) + ", got " + std::to_string(got))
+    {}
 };
 
 
@@ -79,6 +87,9 @@ private:
 
     std::mt19937 rng_;
 
+    int dimension_;
+
+private:
     template<typename InputIterator>
     std::vector<ItemType> makeItems(InputIterator start, InputIterator end);
 
@@ -180,9 +191,21 @@ int VpTree::makeNode(int item) {
 
 template<typename InputIterator>
 std::vector<std::pair<typename VpTree::Vector, int>> VpTree::makeItems(InputIterator begin, InputIterator end) {
+    if (begin != end) {
+        dimension_ = begin->size();
+    } else {
+        dimension_ = -1;
+    }
+
     std::vector<std::pair<Vector, int>> res;
     for (int i = 0; begin != end; ++begin, ++i) {
-        res.push_back(std::make_pair(Vector(begin->begin(), begin->end()), i));
+        auto vec = Vector(begin->begin(), begin->end());
+        res.push_back(std::make_pair(vec, i));
+
+        auto lastDimension = res.back().first.size();
+        if (lastDimension != dimension_) {
+            throw DimensionMismatch(dimension_, lastDimension);
+        }
     }
     return res;
 }
@@ -197,6 +220,10 @@ std::pair<std::vector<double>, std::vector<int>> VpTree::getNearestNeighbors(std
 }
 
 std::pair<std::vector<double>, std::vector<int>> VpTree::getNearestNeighbors(const Vector& target, int neighborsCount) const {
+    auto targetDimension = target.size();
+    if (targetDimension != dimension_) {
+        throw DimensionMismatch(dimension_, targetDimension);
+    }
     Searcher searcher(this, target, neighborsCount);
     return searcher.search();
 }
