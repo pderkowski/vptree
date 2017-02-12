@@ -1,5 +1,5 @@
 # vptree
-C++ Vantage Point Tree implementation
+C++ Vantage Point Tree implementation with Python bindings
 
 ## Vantage Point Tree
 
@@ -9,19 +9,30 @@ querying of nearest neighbors in high dimensional spaces.
 ## Implementation
 
 The code is based on a great tutorial: http://stevehanov.ca/blog/index.php?id=130
-The only significant difference is that a search routine can be performed in parallel.
+I modified it so that the search routine can be run in parallel.
+The C++ code is just a single header file. Optional Python bindings can be built.
 
 ## Requirements
 
 - C++11 compatible compiler
-- cmake 3.0+ (if you want to run tests)
+
+Additionally, for building Python bindings and running tests:
+- cmake 3.0+
+- python (python-dev or python3-dev package on Debian/Ubuntu)
+- pip
 
 ## Instalation
 
-Just copy the header file (vptree.hpp).
+### C++
+Just copy the header file (vptree.hpp). Compile with C++11 or higher.
 
-For tests:
+### Python
+```
+git clone --recursive https://github.com/piotder/vptree.git <your_local_path>
+pip install <your_local_path>
+```
 
+### Tests
 ```
 mkdir bin
 cd bin
@@ -32,6 +43,7 @@ make test
 
 ## Usage
 
+### C++
 ```c++
 auto points = std::vector<std::vector<double>>{
     {0, 0, 1},
@@ -50,4 +62,17 @@ std::tie(distances, indices) = t1.getNearestNeighbors({ 0, 0, 0 }, 3); // find 3
 std::cout << distances[0] << "\n"; // prints 0
 std::cout << indices[0] << "\n"; // prints 1
 ```
+### Python
+```Python
+from vptree import VpTree
 
+points = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [1.5, 2.5, 3.5]
+] # can also be a numpy array
+
+tree = VpTree(points)
+
+distances, indices = tree.getNearestNeighbors([0, 0, 0.5], 2)
+```
