@@ -136,9 +136,7 @@ TEST_CASE("VpTree::getNearestNeighbors returns the same results as naive method 
         std::tie(treeDistances, treeIndices) = tree.getNearestNeighbors(p, neighborsCount);
         std::tie(naiveDistances, naiveIndices) = naive.getNearestNeighbors(p, neighborsCount);
 
-        for (int i = 0; i < neighborsCount; ++i) {
-            REQUIRE((treeDistances[i] == naiveDistances[i] && treeIndices[i] == naiveIndices[i]) == true);
-        }
+        REQUIRE((treeDistances == naiveDistances && treeIndices == naiveIndices) == true);
     }
 }
 

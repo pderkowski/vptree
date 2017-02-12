@@ -12,6 +12,14 @@ import vptree
 import unittest
 import math
 
+try:
+    import numpy as np
+    runNumpyTests = True
+except ImportError:
+    print(ImportError('Could not import numpy, skipping some tests.'))
+    runNumpyTests = False
+
+
 class TestVpTree(unittest.TestCase):
     def test_constructorFromListOfLists(self):
         try:
@@ -39,5 +47,50 @@ class TestVpTree(unittest.TestCase):
         self.assertEqual(distances, [0, math.sqrt(0.5), math.sqrt(3.25)])
         self.assertEqual(indices, [3, 4, 0])
 
+class TestVpTreeWithNumpy(unittest.TestCase):
+    def test_constructorFromArrayOfFloat(self):
+        points = np.array([
+            [0., 1., 2.],
+            [2., 2., 2.],
+            [3.5, 0., -1],
+            [0, 0, 0.5],
+            [-0.5, -0.5, 0.5]
+        ], np.dtype('f'))
+
+        tree = vptree.VpTree(points)
+
+        distances, indices = tree.getNearestNeighbors([0., 0., 0.5], 3)
+
+        self.assertEqual(len(distances), 3)
+        self.assertEqual(len(indices), 3)
+
+        self.assertEqual(distances, [0, math.sqrt(0.5), math.sqrt(3.25)])
+        self.assertEqual(indices, [3, 4, 0])
+
+    def test_constructorFromArrayOfDouble(self):
+        points = np.array([
+            [0., 1., 2.],
+            [2., 2., 2.],
+            [3.5, 0., -1],
+            [0, 0, 0.5],
+            [-0.5, -0.5, 0.5]
+        ], np.dtype('d'))
+
+        tree = vptree.VpTree(points)
+
+        distances, indices = tree.getNearestNeighbors([0., 0., 0.5], 3)
+
+        self.assertEqual(len(distances), 3)
+        self.assertEqual(len(indices), 3)
+
+        self.assertEqual(distances, [0, math.sqrt(0.5), math.sqrt(3.25)])
+        self.assertEqual(indices, [3, 4, 0])
+
+
 if __name__ == '__main__':
-    unittest.main(argv=([sys.argv[0]] + sys.argv[2:])) # skip the path to vptree module
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(TestVpTree))
+    if runNumpyTests:
+        suite.addTest(unittest.makeSuite(TestVpTreeWithNumpy))
+
+    unittest.TextTestRunner().run(suite)
