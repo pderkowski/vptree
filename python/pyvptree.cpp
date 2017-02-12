@@ -36,7 +36,8 @@ PYBIND11_PLUGIN(vptree) {
                 throw std::runtime_error("Incompatible format: expected a double or float array!");
             }
         })
-        .def("getNearestNeighbors", &vpt::VpTree::getNearestNeighbors<vpt::VpTree::Vector>);
+        .def("getNearestNeighbors", &vpt::VpTree::getNearestNeighbors<vpt::Vector>)
+        .def("getNearestNeighborsBatch", &vpt::VpTree::getNearestNeighborsBatch<std::vector<vpt::Vector>>);
 
 
 #ifdef VERSION_INFO

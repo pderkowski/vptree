@@ -11,6 +11,7 @@ else:
 import vptree
 import unittest
 import math
+import random
 
 try:
     import numpy as np
@@ -19,6 +20,8 @@ except ImportError:
     print(ImportError('Could not import numpy, skipping some tests.'))
     runNumpyTests = False
 
+def getPoints(count, size):
+    return [[random.random() for _ in range(size)] for _ in range(count)]
 
 class TestVpTree(unittest.TestCase):
     def test_constructorFromListOfLists(self):
@@ -46,6 +49,14 @@ class TestVpTree(unittest.TestCase):
 
         self.assertEqual(distances, [0, math.sqrt(0.5), math.sqrt(3.25)])
         self.assertEqual(indices, [3, 4, 0])
+
+    def test_parallelQuery(self):
+        points = getPoints(1000, 100)
+
+        tree = vptree.VpTree(points)
+        batch = tree.getNearestNeighborsBatch(points, 10)
+
+        self.assertEqual(batch[0], tree.getNearestNeighbors(points[0], 10))
 
 class TestVpTreeWithNumpy(unittest.TestCase):
     def test_constructorFromArrayOfFloat(self):

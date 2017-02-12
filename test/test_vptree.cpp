@@ -11,6 +11,7 @@
 #include <array>
 #include <queue>
 
+
 template<typename Matrix>
 void fillPoints(Matrix& m) {
     typedef typename Matrix::value_type Column;
@@ -163,3 +164,31 @@ TEST_CASE("VpTree throws an exception when query has inconsistent dimensions in 
         t.getNearestNeighbors({0, 0}, 1);
     }(), vpt::DimensionMismatch);
 }
+
+#if defined(_OPENMP)
+TEST_CASE("VpTree::getNearestNeighborsBatch gives the same results as looping getNearestNeighbors") {
+    const int size = 1000;
+    auto points = std::vector<std::vector<double>>(size, std::vector<double>(100));
+    fillPoints(points);
+
+    auto tree = vpt::VpTree(points);
+
+    vpt::BatchDistancesIndices batch1(points.size());
+    for (int i = 0; i < points.size(); ++i) {
+        batch1[i] = tree.getNearestNeighbors(points[i], 10);
+    }
+
+    vpt::BatchDistancesIndices batch2 = tree.getNearestNeighborsBatch(points, 10);
+
+    REQUIRE(batch1 == batch2);
+}
+
+TEST_CASE("VpTree::getNearestNeighborsBatch works with initializer_list") {
+    auto points = std::vector<std::vector<double>>(100, std::vector<double>(3));
+    fillPoints(points);
+
+    auto tree = vpt::VpTree(points);
+
+    auto batch = tree.getNearestNeighborsBatch({{0, 0, 0}, {1, 1, 1}, {0.5, 0.5, 0.5}}, 5);
+}
+#endif

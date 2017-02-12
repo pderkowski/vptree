@@ -12,6 +12,12 @@
 
 namespace vpt {
 
+typedef std::vector<double> Vector;
+typedef std::function<double(const Vector& v1, const Vector& v2)> Metric;
+typedef std::pair<std::vector<double>, std::vector<int>> DistancesIndices;
+typedef std::vector<DistancesIndices> BatchDistancesIndices;
+
+
 template<class InputIterator>
 double sum(InputIterator begin, InputIterator end) {
     double result = 0;
@@ -24,7 +30,7 @@ double sum(InputIterator begin, InputIterator end) {
 template<typename Container>
 struct EuclideanMetric {
     double operator() (const Container& v1, const Container& v2) const {
-        std::vector<double> diffSquares(v1.size());
+        Vector diffSquares(v1.size());
         std::transform(v1.begin(), v1.end(), v2.begin(), diffSquares.begin(), [] (double lhs, double rhs) {
             return (lhs - rhs) * (lhs - rhs);
         });
@@ -47,10 +53,6 @@ class Searcher;
 
 class VpTree {
 public:
-    typedef std::vector<double> Vector;
-    typedef std::function<double(const Vector& v1, const Vector& v2)> Metric;
-
-public:
     template<typename InputIterator>
     explicit VpTree(InputIterator start, InputIterator end, Metric metric = EuclideanMetric<Vector>());
 
@@ -58,10 +60,14 @@ public:
     explicit VpTree(const Container& container, Metric metric = EuclideanMetric<Vector>());
     explicit VpTree(std::initializer_list<Vector> list, Metric metric = EuclideanMetric<Vector>());
 
-    std::pair<std::vector<double>, std::vector<int>> getNearestNeighbors(const Vector& target, int neighborsCount) const;
+    DistancesIndices getNearestNeighbors(const Vector& target, int neighborsCount) const;
     template<typename VectorLike>
-    std::pair<std::vector<double>, std::vector<int>> getNearestNeighbors(const VectorLike& target, int neighborsCount) const;
-    std::pair<std::vector<double>, std::vector<int>> getNearestNeighbors(std::initializer_list<double> target, int neighborsCount) const;
+    DistancesIndices getNearestNeighbors(const VectorLike& target, int neighborsCount) const;
+    DistancesIndices getNearestNeighbors(std::initializer_list<double> target, int neighborsCount) const;
+
+    template<typename Container>
+    BatchDistancesIndices getNearestNeighborsBatch(const Container& targets, int neighborsCount) const;
+    BatchDistancesIndices getNearestNeighborsBatch(std::initializer_list<Vector> targets, int neighborsCount) const;
 
     const Metric getDistance;
 
@@ -80,9 +86,9 @@ private:
     };
 
 private:
-    typedef std::pair<Vector, int> ItemType;
+    typedef std::pair<Vector, int> Item;
 
-    std::vector<ItemType> items_;
+    std::vector<Item> items_;
     std::vector<Node> nodes_;
 
     std::mt19937 rng_;
@@ -91,7 +97,7 @@ private:
 
 private:
     template<typename InputIterator>
-    std::vector<ItemType> makeItems(InputIterator start, InputIterator end);
+    std::vector<Item> makeItems(InputIterator start, InputIterator end);
 
     int makeTree(int lower, int upper);
     void selectRoot(int lower, int upper);
@@ -104,7 +110,6 @@ private:
 
 class Searcher {
 private:
-    typedef typename VpTree::Vector Vector;
     typedef typename VpTree::Node Node;
 
 public:
@@ -179,7 +184,7 @@ void VpTree::partitionByDistance(int lower, int pos, int upper) {
         items_.begin() + lower + 1,
         items_.begin() + pos,
         items_.begin() + upper,
-        [lower, this] (const ItemType& i1, const ItemType& i2) {
+        [lower, this] (const Item& i1, const Item& i2) {
             return getDistance(items_[lower].first, i1.first) < getDistance(items_[lower].first, i2.first);
         });
 }
@@ -190,14 +195,14 @@ int VpTree::makeNode(int item) {
 }
 
 template<typename InputIterator>
-std::vector<std::pair<typename VpTree::Vector, int>> VpTree::makeItems(InputIterator begin, InputIterator end) {
+std::vector<std::pair<Vector, int>> VpTree::makeItems(InputIterator begin, InputIterator end) {
     if (begin != end) {
         dimension_ = begin->size();
     } else {
         dimension_ = -1;
     }
 
-    std::vector<std::pair<Vector, int>> res;
+    std::vector<Item> res;
     for (int i = 0; begin != end; ++begin, ++i) {
         auto vec = Vector(begin->begin(), begin->end());
         res.push_back(std::make_pair(vec, i));
@@ -211,15 +216,15 @@ std::vector<std::pair<typename VpTree::Vector, int>> VpTree::makeItems(InputIter
 }
 
 template<typename VectorLike>
-std::pair<std::vector<double>, std::vector<int>> VpTree::getNearestNeighbors(const VectorLike& target, int neighborsCount) const {
+DistancesIndices VpTree::getNearestNeighbors(const VectorLike& target, int neighborsCount) const {
     return getNearestNeighbors(Vector(target.begin(), target.end()), neighborsCount);
 }
 
-std::pair<std::vector<double>, std::vector<int>> VpTree::getNearestNeighbors(std::initializer_list<double> target, int neighborsCount) const {
+DistancesIndices VpTree::getNearestNeighbors(std::initializer_list<double> target, int neighborsCount) const {
     return getNearestNeighbors(Vector(target.begin(), target.end()), neighborsCount);
 }
 
-std::pair<std::vector<double>, std::vector<int>> VpTree::getNearestNeighbors(const Vector& target, int neighborsCount) const {
+DistancesIndices VpTree::getNearestNeighbors(const Vector& target, int neighborsCount) const {
     auto targetDimension = target.size();
     if (targetDimension != dimension_) {
         throw DimensionMismatch(dimension_, targetDimension);
@@ -228,16 +233,29 @@ std::pair<std::vector<double>, std::vector<int>> VpTree::getNearestNeighbors(con
     return searcher.search();
 }
 
+template<typename Container>
+BatchDistancesIndices VpTree::getNearestNeighborsBatch(const Container& targets, int neighborsCount) const {
+    BatchDistancesIndices batch(targets.size());
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < targets.size(); ++i) {
+        batch[i] = getNearestNeighbors(targets[i], neighborsCount);
+    }
+    return batch;
+}
+
+BatchDistancesIndices VpTree::getNearestNeighborsBatch(std::initializer_list<Vector> targets, int neighborsCount) const {
+    return getNearestNeighborsBatch(std::vector<Vector>(targets.begin(), targets.end()), neighborsCount);
+}
 
 
 Searcher::Searcher(const VpTree* tree, const Vector& target, int neighborsCount)
 : tree_(tree), target_(target), neighborsCount_(neighborsCount), tau_(std::numeric_limits<double>::max()), heap_()
 { }
 
-std::pair<std::vector<double>, std::vector<int>> Searcher::search() {
+DistancesIndices Searcher::search() {
     searchInNode(tree_->root());
 
-    std::pair<std::vector<double>, std::vector<int>> results;
+    DistancesIndices results;
     while(!heap_.empty()) {
         results.first.push_back(heap_.top().dist);
         results.second.push_back(tree_->items_[heap_.top().item].second);
