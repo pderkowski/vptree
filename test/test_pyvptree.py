@@ -1,0 +1,43 @@
+from __future__ import print_function
+
+import os
+import sys
+if len(sys.argv) > 1 and sys.argv[1]:
+    sys.path.insert(0, os.path.abspath(sys.argv[1]))
+else:
+    print("Provide a path to the directory containing vptree module.")
+    sys.exit(2)
+
+import vptree
+import unittest
+import math
+
+class TestVpTree(unittest.TestCase):
+    def test_constructorFromListOfLists(self):
+        try:
+            points = [[0, 1], [2., 3.]]
+            tree = vptree.VpTree(points)
+        except:
+            self.fail("VpTree was not constructed properly")
+
+    def test_simpleQuery(self):
+        points = [
+            [0., 1., 2.],
+            [2., 2., 2.],
+            [3.5, 0., -1],
+            [0, 0, 0.5],
+            [-0.5, -0.5, 0.5]
+        ]
+
+        tree = vptree.VpTree(points)
+
+        distances, indices = tree.getNearestNeighbors([0., 0., 0.5], 3)
+
+        self.assertEqual(len(distances), 3)
+        self.assertEqual(len(indices), 3)
+
+        self.assertEqual(distances, [0, math.sqrt(0.5), math.sqrt(3.25)])
+        self.assertEqual(indices, [3, 4, 0])
+
+if __name__ == '__main__':
+    unittest.main(argv=([sys.argv[0]] + sys.argv[2:])) # skip the path to vptree module

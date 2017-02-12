@@ -6,7 +6,7 @@ add_library(VpTree INTERFACE)
 target_include_directories(VpTree INTERFACE ${CMAKE_SOURCE_DIR})
 
 add_subdirectory(external)
-add_subdirectory(test)
+add_subdirectory(python)
 
 enable_testing()
-add_test(NAME VpTreeTest COMMAND test_vptree)
+add_subdirectory(test)
