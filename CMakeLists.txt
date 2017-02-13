@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(VpTree)
 set(CMAKE_BUILD_TYPE Release)
 
-add_library(VpTree INTERFACE)
-target_include_directories(VpTree INTERFACE ${CMAKE_SOURCE_DIR})
+set(VPTREE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "Path to VpTree include directory.")
+
 find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")

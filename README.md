@@ -17,7 +17,7 @@ The C++ code is just a single header file. Optional Python bindings can be built
 - C++11 compatible compiler
 
 Additionally, for building Python bindings and running tests:
-- cmake 3.0+
+- cmake 2.8.12+
 - python (python-dev or python3-dev package on Debian/Ubuntu)
 - pip
 
