@@ -54,9 +54,9 @@ class TestVpTree(unittest.TestCase):
         points = getPoints(1000, 100)
 
         tree = vptree.VpTree(points)
-        batch = tree.getNearestNeighborsBatch(points, 10)
+        distances, indices = tree.getNearestNeighborsBatch(points, 10)
 
-        self.assertEqual(batch[0], tree.getNearestNeighbors(points[0], 10))
+        self.assertEqual((distances[0], indices[0]), tree.getNearestNeighbors(points[0], 10))
 
 class TestVpTreeWithNumpy(unittest.TestCase):
     def test_constructorFromArrayOfFloat(self):

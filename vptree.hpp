@@ -15,7 +15,7 @@ namespace vpt {
 typedef std::vector<double> Vector;
 typedef std::function<double(const Vector& v1, const Vector& v2)> Metric;
 typedef std::pair<std::vector<double>, std::vector<int>> DistancesIndices;
-typedef std::vector<DistancesIndices> BatchDistancesIndices;
+typedef std::pair<std::vector<std::vector<double>>, std::vector<std::vector<int>>> BatchDistancesIndices;
 
 
 template<class InputIterator>
@@ -235,12 +235,13 @@ DistancesIndices VpTree::getNearestNeighbors(const Vector& target, int neighbors
 
 template<typename Container>
 BatchDistancesIndices VpTree::getNearestNeighborsBatch(const Container& targets, int neighborsCount) const {
-    BatchDistancesIndices batch(targets.size());
+    std::vector<std::vector<double>> batchDistances(targets.size());
+    std::vector<std::vector<int>> batchIndices(targets.size());
 #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < targets.size(); ++i) {
-        batch[i] = getNearestNeighbors(targets[i], neighborsCount);
+        std::tie(batchDistances[i], batchIndices[i]) = getNearestNeighbors(targets[i], neighborsCount);
     }
-    return batch;
+    return BatchDistancesIndices(batchDistances, batchIndices);
 }
 
 BatchDistancesIndices VpTree::getNearestNeighborsBatch(std::initializer_list<Vector> targets, int neighborsCount) const {

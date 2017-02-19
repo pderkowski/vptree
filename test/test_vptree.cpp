@@ -173,9 +173,11 @@ TEST_CASE("VpTree::getNearestNeighborsBatch gives the same results as looping ge
 
     auto tree = vpt::VpTree(points);
 
-    vpt::BatchDistancesIndices batch1(points.size());
+    vpt::BatchDistancesIndices batch1;
+    batch1.first.resize(points.size());
+    batch1.second.resize(points.size());
     for (int i = 0; i < points.size(); ++i) {
-        batch1[i] = tree.getNearestNeighbors(points[i], 10);
+        std::tie(batch1.first[i], batch1.second[i]) = tree.getNearestNeighbors(points[i], 10);
     }
 
     vpt::BatchDistancesIndices batch2 = tree.getNearestNeighborsBatch(points, 10);

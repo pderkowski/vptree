@@ -63,8 +63,8 @@ std::cout << distances[0] << "\n"; // prints 0
 std::cout << indices[0] << "\n"; // prints 1
 
 auto batch = t1.getNearestNeighborsBatch({{0, 0, 0}, {1, 1, 1}, {0.5, 0.5, 0.5}}, 3); // split the work between threads
-batch[0].first == distances // true
-batch[0].second == indices // true
+batch.first[0] == distances // true
+batch.second[0] == indices // true
 
 ```
 ### Python
@@ -80,6 +80,7 @@ points = [
 tree = VpTree(points)
 
 distances, indices = tree.getNearestNeighbors([0, 0, 0.5], 2)
-batch = tree.getNearestNeighborsBatch([[0, 0, 0.5], [1, 1, 1], [2, 2, 2]], 2) // split the work between threads
-(distances, indices) == batch[0] // True
+batchDistances, batchIndices = tree.getNearestNeighborsBatch([[0, 0, 0.5], [1, 1, 1], [2, 2, 2]], 2) # split the work between threads
+distances == batchDistances[0] # True
+indices == batchIndices[0] # True
 ```
