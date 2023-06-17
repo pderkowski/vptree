@@ -9,6 +9,8 @@
 #include <random>
 #include <cmath>
 #include <stdexcept>
+#include <functional>
+#include <string>
 
 namespace vpt {
 
